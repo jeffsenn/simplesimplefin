@@ -12,7 +12,7 @@ Authorize this script for you:
 
   `python fetch.py <setup token from above>`
 
-This script keeps sensitive state in "status.json", and outputs transactions to CSV files "T-<time>.csv"
+This script keeps sensitive state in `status.json`, and outputs transactions to CSV files `T-<time>.csv`
 
 You should run every 24 hours:
 
