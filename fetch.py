@@ -57,12 +57,13 @@ def update(lastfetch):
         print(f"Fetching {account.get('org',{}).get('name','Unknown')} - {account.get('name')}")
         prevtrans = set(lastfetch.get(aid+"-prev",[]))
         newprev = list(prevtrans)
-        newprev_time = lastfetch.get(aid+"-start",0)
-        trans = get_data(url, account=account['id'], start=lastfetch.get(aid+"-start",1))
+        newprev_time = lastfetch.get(aid+"-start",1)
+        trans = get_data(url, account=account['id'], start=newprev_time)
         lastfetch[aid+'-info'] = account
         lastfetch[aid+'-updated'] = now
         skipped = 0
         for account2 in trans['accounts']:
+            if account2['id'] != aid: raise Exception("account id mismatch",aid, account2)
             print(f"{len(account2['transactions'])} transactions.")
             for t in account2['transactions']:
                 tid = t['id']
@@ -73,10 +74,12 @@ def update(lastfetch):
                 if lt > newprev_time:
                     lastfetch[aid+"-start"] = lt
                     newprev = [tid]
+                    newprev_time = lt
                 elif lt == newprev_time:
                     newprev.append(tid)
-            lastfetch[aid+"-start"] = newprev
-            if skipped: print("{skipped} skipped.")
+            lastfetch[aid+"-start"] = newprev_time
+            lastfetch[aid+"-prev"] = newprev
+            if skipped: print(f"{skipped} skipped.")
     if len(transactions) > 1:
         fn = f"T-{str(int(time.time()))}.csv"
         with open(fn, mode="w", newline="") as file:
