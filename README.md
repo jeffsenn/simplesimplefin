@@ -1,3 +1,7 @@
+This is a simple, command line/text/spreadsheet compatible utility for aggregating transaction data from your financial institutions.
+
+Probably works for many major US bank & credit institutions.
+
 Makes use of simplefin bridge (https://beta-bridge.simplefin.org/)
 
 You have to:
@@ -21,4 +25,7 @@ You should run every 24 hours:
 You can run to report your current balances and net:
 
     python balances.py`
+
+Caveats:
+ - assumes all accounts use same currency (could be extended)
 
