@@ -57,7 +57,7 @@ def update(lastfetch):
         prevtrans = set(lastfetch.get(aid+"-prev",[]))
         newprev = list(prevtrans)
         newprev_time = lastfetch.get(aid+"-start",0)
-        trans = get_data(account=account['id'], start=lastfetch.get(aid+"-start",1))
+        trans = get_data(url, account=account['id'], start=lastfetch.get(aid+"-start",1))
         lastfetch[aid+'-info'] = account
         skipped = 0
         for account2 in trans['accounts']:
@@ -76,9 +76,11 @@ def update(lastfetch):
             lastfetch[aid+"-start"] = newprev
             if skipped: print("{skipped} skipped.")
     if len(transactions) > 1:
-        with open(f"T-{str(int(time.time()))}.csv", mode="w", newline="") as file:
+        fn = f"T-{str(int(time.time()))}.csv"
+        with open(fn, mode="w", newline="") as file:
             writer = csv.writer(file)
             writer.writerows(transactions)
+        print(":OUTPUT:",fn)
     return lastfetch
 
 if __name__ == "__main__":

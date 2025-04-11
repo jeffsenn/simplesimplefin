@@ -3,6 +3,10 @@ import json
 import sys
 import pprint
 import math
+import datetime
+
+def ts_to_datetime(ts):
+    return datetime.datetime.fromtimestamp(ts)
 
 lastfetch = json.loads(open("status.json","r").read())
 with open(sys.argv[1], newline='') as csvfile:
@@ -17,11 +21,16 @@ for row in rows[1:]:
 debt = 0.0
 income = 0.0
 peraccount = {}
+mint = math.inf
+maxt = 0
 for t in data:
     aid = t['account_id']
     if not peraccount.get(aid):
         peraccount[aid] = [0.0, 0.0, 0.0, t['institution'] + '-' + t['account']]
     amt = float(t['amount'])
+    tm = int(t['transacted_at'])
+    maxt = max(tm,maxt)
+    mint = min(tm,mint)
     if amt > 0:
         income += amt
         peraccount[aid][0] += amt
@@ -44,14 +53,19 @@ for ac in peraccount:
     if math.fabs(amt) > 0.01:
         a = f"{amt:,.2f}"
         nreport.append((math.fabs(amt), f"{a:>14} {nam}"))
-print(f"Total Outgoing: {debt:,.2f}")
-print(f"Total Income  :  {income:,.2f}")
-print()
-print("Net:")
-print("\n".join([a[1] for a in reversed(sorted(nreport))]))
-print()
-print("In:")
-print("\n".join([a[1] for a in reversed(sorted(ireport))]))
-print("Out:")
-print("\n".join([a[1] for a in reversed(sorted(oreport))]))
 
+final = f"""Accounts Report - {ts_to_datetime(mint)} - {ts_to_datetime(maxt)}
+
+Total Outgoing: {debt:,.2f}
+Total Income  :  {income:,.2f}
+
+Net:
+{"\n".join([a[1] for a in reversed(sorted(nreport))])}
+
+In:
+{"\n".join([a[1] for a in reversed(sorted(ireport))])}
+Out:
+{"\n".join([a[1] for a in reversed(sorted(oreport))])}
+"""
+
+print(final)
