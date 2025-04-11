@@ -26,6 +26,10 @@ You can run to report your current balances and net:
 
     python balances.py`
 
+You can run to report per account transaction flow:
+
+    python summarize.py T-<time>.csv
+
 Caveats:
  - assumes all accounts use same currency (could be extended)
 
