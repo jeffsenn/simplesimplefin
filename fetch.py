@@ -51,6 +51,7 @@ def update(lastfetch):
     url = lastfetch['url']
     print("Getting accounts....")
     data = get_data(url)
+    now = int(time.time())
     for account in data['accounts']:
         aid = account['id']
         print(f"Fetching {account.get('org',{}).get('name','Unknown')} - {account.get('name')}")
@@ -59,6 +60,7 @@ def update(lastfetch):
         newprev_time = lastfetch.get(aid+"-start",0)
         trans = get_data(url, account=account['id'], start=lastfetch.get(aid+"-start",1))
         lastfetch[aid+'-info'] = account
+        lastfetch[aid+'-updated'] = now
         skipped = 0
         for account2 in trans['accounts']:
             print(f"{len(account2['transactions'])} transactions.")
