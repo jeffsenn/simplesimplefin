@@ -5,6 +5,8 @@ import json
 import time
 import csv
 
+ERR_FILE="err.txt"
+
 def new_app_setup(setup_token):
     setup_token = base64.b64decode(setup_token)
     response = requests.post(claim_url)
@@ -48,10 +50,12 @@ def output_transaction(a,t,lis):
     
 def update(lastfetch):
     transactions = [('institution','account','account_id','date_transacted') + TRANS_ATTRS + ('date_posted',)] # csv header
+    all_errs = []
     url = lastfetch['url']
     print("Getting accounts....")
     data = get_data(url)
     now = int(time.time())
+    all_errs.extend(data.get('errors'))
     for account in data['accounts']:
         aid = account['id']
         print(f"Fetching {account.get('org',{}).get('name','Unknown')} - {account.get('name')}")
@@ -62,6 +66,7 @@ def update(lastfetch):
         lastfetch[aid+'-info'] = account
         lastfetch[aid+'-updated'] = now
         skipped = 0
+        all_errs.extend(trans.get('errors'))        
         for account2 in trans['accounts']:
             if account2['id'] != aid: raise Exception("account id mismatch",aid, account2)
             print(f"{len(account2['transactions'])} transactions.")
@@ -86,6 +91,12 @@ def update(lastfetch):
             writer = csv.writer(file)
             writer.writerows(transactions)
         print(":OUTPUT:",fn)
+        
+    if os.path.exists(ERR_FILE): os.remove(ERR_FILE)
+    if len(all_errs):
+        e = "\n".join(list(set(all_errs)))
+        open(ERR_FILE, 'w').write(e)
+        print(":ERRORS:\n", e)
     return lastfetch
 
 if __name__ == "__main__":

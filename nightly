@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -e
+files=`echo -n T-*.csv`
+if [ "$files" != 'T-*.csv' ]; then
+   mv T-*.csv data/
+fi
+python fetch.py
+files=`echo -n T-*.csv`
+python balances.py > output.txt
+if [ -e "err.txt" ]; then
+   echo "\n****************************\n" >> output.txt
+   cat err.txt >> output.txt
+   echo "\n****************************\n" >> output.txt   
+fi
+if [ "$files" != 'T-*.csv' ]; then
+   echo "\n-------------------------------\n" >> output.txt
+   python summarize.py T-*.csv >> output.txt
+fi
+# uncomment to mail report (you'll have to have local mail client setup)
+#mail -s "Finance Update" 'someone@example.com' < output.txt
+
+
