@@ -9,12 +9,13 @@ python fetch.py
 files=`echo -n T-*.csv`
 python balances.py > output.txt
 if [ -e "err.txt" ]; then
-   echo "\n****************************\n" >> output.txt
+   echo '****************************' >> output.txt
+   echo 'https://beta-bridge.simplefin.org/my-account' >> output.txt
    cat err.txt >> output.txt
-   echo "\n****************************\n" >> output.txt   
+   echo '' >> output.txt
 fi
 if [ "$files" != 'T-*.csv' ]; then
-   echo "\n-------------------------------\n" >> output.txt
+   echo "-------------------------------" >> output.txt
    python summarize.py T-*.csv >> output.txt
 fi
 # uncomment to mail report (you'll have to have local mail client setup)
