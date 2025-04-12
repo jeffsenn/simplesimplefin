@@ -4,6 +4,7 @@ import pprint
 import json
 import time
 import csv
+import os
 
 ERR_FILE="err.txt"
 
