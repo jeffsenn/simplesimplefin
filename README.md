@@ -11,12 +11,14 @@ You have to:
  - go to "my account" and add institutions
  - install `python` on your computer
  - install requests module: `pip install requests`
+ - might need dbm module installed if it doesn't come with your python
+ - edit 'env' file for parameters
  
 Authorize this script for you:
 
   `python fetch.py <setup token from above>`
 
-This script keeps sensitive state in `status.json`, and outputs transactions to CSV files `T-<time>.csv`
+This script keeps sensitive state in `status.json` and `trans.db`, and outputs transactions to CSV files `T-<time>.csv`
 
 You should run every 24 hours:
 
@@ -29,6 +31,10 @@ You can run to report your current balances and net:
 You can run to report per account transaction flow:
 
     python summarize.py T-<time>.csv
+
+Clear all state to start over with (does not delete transaction files):
+
+    python clear.py
 
 Caveats:
  - assumes all accounts use same currency (could be extended)

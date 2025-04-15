@@ -5,8 +5,10 @@ import json
 import time
 import csv
 import os
+import dbm
 
 ERR_FILE="err.txt"
+TIME_OVERLAP=3*3600*24 # 3 days
 
 def new_app_setup(setup_token):
     setup_token = base64.b64decode(setup_token)
@@ -49,7 +51,7 @@ def output_transaction(a,t,lis):
     lis.append([ins,acc,a['id'],td]+[t.get(a) for a in TRANS_ATTRS]+[pd])
     return t['posted']
     
-def update(lastfetch):
+def update(lastfetch, db):
     transactions = [('institution','account','account_id','date_transacted') + TRANS_ATTRS + ('date_posted',)] # csv header
     all_errs = []
     url = lastfetch['url']
@@ -59,33 +61,30 @@ def update(lastfetch):
     all_errs.extend(data.get('errors'))
     for account in data['accounts']:
         aid = account['id']
-        print(f"Fetching {account.get('org',{}).get('name','Unknown')} - {account.get('name')}")
-        prevtrans = set(lastfetch.get(aid+"-prev",[]))
-        newprev = list(prevtrans)
-        newprev_time = lastfetch.get(aid+"-start",1)
+        newprev_time = lastfetch.get(aid+"-start",None)
+        if newprev_time: newprev_time -= TIME_OVERLAP
+        else: newprev_time = 1
         trans = get_data(url, account=account['id'], start=newprev_time)
         lastfetch[aid+'-info'] = account
         lastfetch[aid+'-updated'] = now
         skipped = 0
         all_errs.extend(trans.get('errors'))        
         for account2 in trans['accounts']:
+            cnt = len(account2['transactions'])
             if account2['id'] != aid: raise Exception("account id mismatch",aid, account2)
-            print(f"{len(account2['transactions'])} transactions.")
             for t in account2['transactions']:
                 tid = t['id']
-                if tid in prevtrans:
+                tidb = tid.encode('utf8')
+                if db.get(tidb):
                     skipped += 1
                     continue
+                db[tidb] = json.dumps(t).encode('utf8')
                 lt = output_transaction(account, t, transactions)
                 if lt > newprev_time:
                     lastfetch[aid+"-start"] = lt
-                    newprev = [tid]
                     newprev_time = lt
-                elif lt == newprev_time:
-                    newprev.append(tid)
             lastfetch[aid+"-start"] = newprev_time
-            lastfetch[aid+"-prev"] = newprev
-            if skipped: print(f"{skipped} skipped.")
+            print(f"{cnt-skipped:>4}/{skipped:>4} : {account.get('org',{}).get('name','Unknown')} - {account.get('name')}")
     if len(transactions) > 1:
         fn = f"T-{str(int(time.time()))}.csv"
         with open(fn, mode="w", newline="") as file:
@@ -100,6 +99,7 @@ def update(lastfetch):
         print(":ERRORS:\n", e)
     return lastfetch
 
+
 if __name__ == "__main__":
     try:
         lastfetch = json.loads(open("status.json","r").read())
@@ -109,5 +109,6 @@ if __name__ == "__main__":
         lastfetch = {'url':url}
         # save in case something fails
         open("status.json","w").write(json.dumps(lastfetch))
-    newstate = update(lastfetch)
+    with dbm.open('trans.db', 'c') as db:
+        newstate = update(lastfetch, db)
     open("status.json","w").write(json.dumps(newstate))

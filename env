@@ -1,0 +1,6 @@
+# python
+PYTHON=$HOME/.pyenv/shims/python3
+# who to mail nightly
+MAILTO=""
+# destination for transaction files
+COPYTO=data/

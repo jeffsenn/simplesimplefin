@@ -1,24 +1,29 @@
-#!/bin/bash
-
+#!/bin/zsh
 set -e
-files=`echo -n T-*.csv`
-if [ "$files" != 'T-*.csv' ]; then
-   mv T-*.csv data/
+source env
+setopt nullglob
+files=(T-*.csv)
+if (( ${#files[@]} > 0 )); then
+   mv T-*.csv $COPYTO
 fi
-python fetch.py
-files=`echo -n T-*.csv`
-python balances.py > output.txt
-if [ -e "err.txt" ]; then
+$PYTHON fetch.py
+files=(T-*.csv)
+$PYTHON balances.py > output.txt
+if [[ -e err.txt ]]; then
    echo '****************************' >> output.txt
    echo 'https://beta-bridge.simplefin.org/my-account' >> output.txt
    cat err.txt >> output.txt
    echo '' >> output.txt
 fi
-if [ "$files" != 'T-*.csv' ]; then
+if (( ${#files[@]} > 0 )); then
    echo "-------------------------------" >> output.txt
-   python summarize.py T-*.csv >> output.txt
+   $PYTHON summarize.py T-*.csv >> output.txt
 fi
-# uncomment to mail report (you'll have to have local mail client setup)
-#mail -s "Finance Update" 'someone@example.com' < output.txt
+if [[ -z "$MAILTO" ]]; then
+  echo "Not sending email"
+else
+  mail -s 'Finance Update' $MAILTO < output.txt
+fi
+
 
 
